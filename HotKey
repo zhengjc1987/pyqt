@@ -1,0 +1,48 @@
+# coding:utf-8
+'''
+Created on 2020年4月28日
+
+@author: zhengjc
+'''
+
+
+import win32con
+import ctypes
+import ctypes.wintypes
+from PyQt4.QtCore import QThread,pyqtSignal
+
+RUN = False  # 用来传递运行一次的参数
+user32 = ctypes.windll.user32  # 加载user32.dll
+id1 = 105  # 注册热键的唯一id，用来区分热键
+
+
+class Hotkey(QThread):  # 创建一个Thread.threading的扩展类
+    sinCtrlP = pyqtSignal(bool)
+    def run(self):
+        global RUN  # 定义全局变量，这个可以在不同线程间共用。
+        if not user32.RegisterHotKey(None, id1, win32con.MOD_CONTROL, 80):
+            print "Unable to register id", id1  # 返回一个错误信息
+        # 以下为检测热键是否被按下，并在最后释放快捷键
+        try:
+            msg = ctypes.wintypes.MSG()
+            while True:
+                if user32.GetMessageA(ctypes.byref(msg), None, 0, 0) != 0:
+                    if msg.message == win32con.WM_HOTKEY:
+                        if msg.wParam == id1:
+                            self.sinCtrlP.emit(True)
+                    user32.TranslateMessage(ctypes.byref(msg))
+                    user32.DispatchMessageA(ctypes.byref(msg))
+        finally:
+            user32.UnregisterHotKey(None, id1)  # 必须得释放热键，否则下次就会注册失败，所以当程序异常退出，没有释放热键，
+
+
+def main(func):
+    global RUN
+    hotkey = Hotkey()
+    hotkey.start()
+
+    while (True):
+        if RUN:
+            print 'come'
+            func()
+            RUN = False
