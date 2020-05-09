@@ -1,0 +1,31 @@
+# coding:utf-8
+'''
+Created on 2020年4月28日
+
+@author: 86159
+'''
+
+import sys
+from PyQt4.QtGui import QDialog,QApplication,QDesktopWidget
+from PyQt4.QtCore import Qt
+from Ui_CornerDialog import Ui_Dialog
+
+class MyDialog(QDialog,Ui_Dialog):
+
+    def __init__(self,parent = None):
+        super(MyDialog,self).__init__(parent)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setupUi(self)
+        self.setLeftCorner()
+
+    def setLeftCorner(self):
+        sc = QDesktopWidget().screenGeometry()
+        size = self.geometry()
+        self.move((sc.width()-size.width()),(sc.height()-size.height()-66))
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    win = MyDialog()
+    win.show()
+    sys.exit(app.exec_())
